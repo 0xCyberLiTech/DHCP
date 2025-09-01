@@ -75,10 +75,10 @@ Ce guide vous permettra de :
 
 ## Étape 1 : Présentation du DHCP
 
-
 Le DHCP (Dynamic Host Configuration Protocol) est un protocole réseau permettant d’attribuer automatiquement des adresses IP et d’autres paramètres réseau (passerelle, DNS, etc.) aux machines d’un réseau local. Il simplifie la gestion des adresses IP et évite les conflits d’adresses.
 
 ### Schéma d’architecture réseau typique
+
 ```mermaid
 flowchart LR
   Internet---FW[Firewall]
@@ -90,6 +90,7 @@ flowchart LR
 ```
 
 ### Schéma du fonctionnement du protocole DHCP
+
 ```mermaid
 sequenceDiagram
   participant Client
@@ -118,6 +119,7 @@ Dans une entreprise, le serveur DHCP attribue automatiquement une adresse IP à 
 
 ### 1. Installation du serveur DHCP
 Sur Debian 12 et 13, le paquet à installer est toujours `isc-dhcp-server` :
+
 ```bash
 sudo apt update
 sudo apt install isc-dhcp-server
@@ -130,6 +132,7 @@ L'adresse MAC (Media Access Control) est un identifiant unique attribué à chaq
 
 
 Éditez le fichier de configuration `/etc/dhcp/dhcpd.conf` :
+
 ```bash
 default-lease-time 600;
 max-lease-time 7200;
@@ -160,6 +163,7 @@ Dans cet exemple :
 - La plage dynamique va de 192.168.1.100 à 192.168.1.200, donc les adresses en dehors de cette plage (ex : 192.168.1.2 à 192.168.1.99) ne seront pas attribuées automatiquement.
 
 Vérifiez que l’interface réseau utilisée par le serveur DHCP est bien définie dans `/etc/default/isc-dhcp-server` :
+
 ```bash
 INTERFACESv4="eth0"
 ```
@@ -167,6 +171,7 @@ Remplacez `eth0` par le nom de votre interface réseau (utilisez `ip a` pour la 
 
 ### 3. Démarrage et vérification
 Activez et démarrez le service DHCP :
+
 ```bash
 sudo systemctl enable isc-dhcp-server
 sudo systemctl start isc-dhcp-server
@@ -178,10 +183,13 @@ Configurez un poste client en DHCP (mode automatique) et vérifiez qu’il reço
 
 ### 5. Dépannage
 Consultez les logs en cas de problème :
+
 ```bash
 sudo journalctl -u isc-dhcp-server
 ```
+
 Vérifiez la syntaxe du fichier de configuration :
+
 ```bash
 sudo dhcpd -t -cf /etc/dhcp/dhcpd.conf
 ```
