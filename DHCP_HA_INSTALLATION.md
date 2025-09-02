@@ -68,10 +68,10 @@ La haute disponibilité (HA) pour DHCP consiste à avoir deux serveurs DHCP sync
 ### Schéma général
 
 ```mermaid
-graph TD;
-    DHCP1[Serveur DHCP 1 (Active/Passive)] <--> DHCP2[Serveur DHCP 2 (Active/Passive)]
-    DHCP1 --> LAN[Réseau LAN]
-    DHCP2 --> LAN
+flowchart TD
+  DHCP1[Serveur DHCP 1 (Active/Passive)] --- LAN[Réseau LAN]
+  DHCP2[Serveur DHCP 2 (Active/Passive)] --- LAN
+  DHCP1 <--> DHCP2
 ```
 
 ---
@@ -80,17 +80,19 @@ graph TD;
 
 ```mermaid
 flowchart TD
-  A[Installation Debian 12/13] --> B[Configuration IP statique]
-  B --> C[Installation isc-dhcp-server]
-  C --> D[Configuration NTP]
-  D --> E[Ouverture port 647]
-  E --> F[Prêt pour configuration DHCP HA]
-  subgraph Serveur 1
-    A
-  end
-  subgraph Serveur 2
-    A
-  end
+  S1[Serveur 1 : Debian 12/13]
+  S2[Serveur 2 : Debian 12/13]
+  S1 --> IP1[IP statique]
+  S2 --> IP2[IP statique]
+  IP1 --> DHCP1[Installation isc-dhcp-server]
+  IP2 --> DHCP2[Installation isc-dhcp-server]
+  DHCP1 --> NTP1[Configuration NTP]
+  DHCP2 --> NTP2[Configuration NTP]
+  NTP1 --> PORT1[Ouverture port 647]
+  NTP2 --> PORT2[Ouverture port 647]
+  PORT1 --> READY1[Prêt pour DHCP HA]
+  PORT2 --> READY2[Prêt pour DHCP HA]
+```
 ```
 
 ---
