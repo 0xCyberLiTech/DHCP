@@ -57,7 +57,7 @@ Le contenu est structuré, accessible et optimisé SEO pour répondre aux besoin
 
 ---
 
-# Procédure pédagogique : Mise en place d'une solution DHCP Haute Disponibilité (HA) sous Debian 12 & 13
+## Procédure pédagogique : Mise en place d'une solution DHCP Haute Disponibilité (HA) sous Debian 12 & 13
 
 ---
 
