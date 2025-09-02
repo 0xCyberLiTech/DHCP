@@ -57,7 +57,7 @@ Le contenu est structuré, accessible et optimisé SEO pour répondre aux besoin
 
 ---
 
-## Installer un serveur DHCP de secours (Failover) sous Debian 12/13
+## Mise en place d'une solution, DHCP de secours (Failover) sous Debian 12/13
 
 ---
 
