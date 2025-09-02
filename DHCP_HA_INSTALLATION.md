@@ -277,6 +277,7 @@ Vous devez voir des messages du type "DHCP failover peer dhcp-ha: communications
 
 Schéma : Test de bascule DHCP HA
 
+```
 +-------------------+           +-------------------+
 |  DHCP1 (Primary)  |           | DHCP2 (Secondary) |
 |      [OFF]        |           |      [ON]         |
@@ -287,6 +288,7 @@ Schéma : Test de bascule DHCP HA
                  +------------------+
                  |   Clients DHCP   |
                  +------------------+
+```
 
 ---
 
@@ -294,6 +296,7 @@ Schéma : Test de bascule DHCP HA
 
 Schéma de fonctionnement failover
 
+```
 +-------------------+     <---->     +-------------------+
 |  DHCP1 (Primary)  |                | DHCP2 (Secondary) |
 +-------------------+                +-------------------+
@@ -303,6 +306,7 @@ Schéma de fonctionnement failover
                  +------------------+
                  |   Clients DHCP   |
                  +------------------+
+```
 
 ---
 
