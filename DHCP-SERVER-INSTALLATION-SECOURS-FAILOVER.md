@@ -57,28 +57,53 @@ Le contenu est structuré, accessible et optimisé SEO pour répondre aux besoin
 
 ---
 
-## Tutoriel : Installation d’un serveur DHCP de secours (Failover) sous Debian 12/13
-## 1. Introduction
-
-Le protocole **DHCP Failover** permet à deux serveurs DHCP de fonctionner ensemble afin d’assurer une continuité de service en cas de panne de l’un d’eux. En cas d’indisponibilité du serveur principal, le serveur de secours prend le relais et distribue les adresses IP aux clients.
+# Tutoriel : Installer un serveur DHCP de secours (Failover) sous Debian 12/13
 
 ---
 
-## 2. Schéma explicatif
+## 1. Introduction
 
+Le protocole **DHCP Failover** permet à deux serveurs DHCP de fonctionner ensemble pour garantir une continuité de service en cas de panne. Si le serveur principal tombe, le serveur de secours prend le relais et attribue les adresses IP aux clients.
+
+---
+
+## 2. Présentation des serveurs : Production et Secours
+
+Dans une architecture DHCP failover, deux serveurs collaborent :
+
+- **Serveur de Production (DHCP1)**  
+  Serveur principal gérant la majorité des demandes DHCP et l’attribution d’adresses IP.
+
+- **Serveur de Secours (DHCP2)**  
+  Serveur backup surveillant le serveur principal et prenant le relais en cas de panne, assurant ainsi la continuité du service.
+
+Les deux serveurs échangent leurs informations de baux DHCP en temps réel pour éviter tout conflit d’adresses.
+
+---
+
+### Schéma de l’architecture (Mermaid)
+
+```mermaid
+flowchart LR
+    subgraph Réseau
+        Client1[[Client 1]]
+        Client2[[Client 2]]
+        Client3[[Client 3]]
+    end
+
+    DHCP1[(Serveur DHCP<br>Production)]
+    DHCP2[(Serveur DHCP<br>Secours)]
+
+    Client1 -- Demande IP --> DHCP1
+    Client2 -- Demande IP --> DHCP1
+    Client3 -- Demande IP --> DHCP1
+
+    DHCP1 <-->|Synchronisation<br>Failover| DHCP2
+
+    Client1 -- Repli si panne --> DHCP2
+    Client2 -- Repli si panne --> DHCP2
+    Client3 -- Repli si panne --> DHCP2
 ```
-   [Clients]
-      |
-   -----
-   |   |
-[DHCP1] [DHCP2]
-(Principal) (Secours)
-      |      |
-   ----+------+
-       |
-   [Réseau]
-```
-**DHCP1** et **DHCP2** échangent des informations sur les baux et se synchronisent via le protocole failover.
 
 ---
 
@@ -86,14 +111,14 @@ Le protocole **DHCP Failover** permet à deux serveurs DHCP de fonctionner ensem
 
 - Deux serveurs Debian 12 ou 13 (ex : `dhcp1` et `dhcp2`)
 - Accès root ou sudo
-- Les serveurs doivent pouvoir communiquer entre eux (même réseau ou VPN)
-- Les ports TCP 647 et 647 doivent être ouverts entre les deux serveurs
+- Communication réseau entre les deux serveurs (même réseau ou VPN)
+- Ouverture des ports TCP 647 entre les deux serveurs
 
 ---
 
 ## 4. Installation du serveur DHCP
 
-Sur **chaque serveur** (dhcp1 et dhcp2), installez le serveur DHCP :
+Sur **chaque serveur** (dhcp1 et dhcp2) :
 
 ```bash
 sudo apt update
@@ -104,23 +129,21 @@ sudo apt install isc-dhcp-server
 
 ## 5. Configuration du DHCP Failover
 
-### 5.1. Fichier de configuration principal `/etc/dhcp/dhcpd.conf`
+### 5.1. Fichier de configuration `/etc/dhcp/dhcpd.conf`
 
-Exemple de configuration **failover** pour les deux serveurs.
+Configurer les deux serveurs pour le failover.
 
-#### **Sur DHCP1 (serveur principal)**
+#### **Sur DHCP1 (Production) :**
 
 ```conf
-# /etc/dhcp/dhcpd.conf
 authoritative;
 ddns-update-style none;
 
-# Définition du pool failover
 failover peer "dhcp-failover" {
-  primary;                     # DHCP1 est principal
-  address 192.168.1.10;        # IP de DHCP1
-  port 647;                    # Port failover
-  peer address 192.168.1.20;   # IP de DHCP2
+  primary;
+  address 192.168.1.10;
+  port 647;
+  peer address 192.168.1.20;
   peer port 647;
   max-response-delay 60;
   max-unacked-updates 10;
@@ -142,18 +165,17 @@ subnet 192.168.1.0 netmask 255.255.255.0 {
 }
 ```
 
-#### **Sur DHCP2 (serveur de secours)**
+#### **Sur DHCP2 (Secours) :**
 
 ```conf
-# /etc/dhcp/dhcpd.conf
 authoritative;
 ddns-update-style none;
 
 failover peer "dhcp-failover" {
-  secondary;                   # DHCP2 est secours
-  address 192.168.1.20;        # IP de DHCP2
+  secondary;
+  address 192.168.1.20;
   port 647;
-  peer address 192.168.1.10;   # IP de DHCP1
+  peer address 192.168.1.10;
   peer port 647;
   max-response-delay 60;
   max-unacked-updates 10;
@@ -178,12 +200,12 @@ subnet 192.168.1.0 netmask 255.255.255.0 {
 
 ### 5.2. Configuration de l’interface réseau
 
-Dans `/etc/default/isc-dhcp-server`, assurez-vous que l’interface correspond à celle connectée au réseau :
+Dans `/etc/default/isc-dhcp-server` :
 
 ```sh
 INTERFACESv4="eth0"
 ```
-Adaptez selon votre configuration réseau.
+Adaptez selon votre interface réseau.
 
 ---
 
@@ -193,7 +215,7 @@ Adaptez selon votre configuration réseau.
    ```bash
    sudo systemctl start isc-dhcp-server
    ```
-2. **Attendez 1 minute**, puis démarrez le serveur secondaire :
+2. **Attendez 1 minute**, puis démarrez le serveur de secours :
    ```bash
    sudo systemctl start isc-dhcp-server
    ```
@@ -216,9 +238,22 @@ Adaptez selon votre configuration réseau.
 
 ## 8. Test du failover
 
-1. Éteignez le serveur principal (`dhcp1`).
-2. Connectez un client au réseau : il doit recevoir une IP depuis le serveur de secours.
-3. Rallumez le serveur principal : la synchronisation reprend automatiquement.
+```mermaid
+sequenceDiagram
+    participant Client
+    participant DHCP1
+    participant DHCP2
+
+    Note over DHCP1: DHCP1 actif
+    Client->>DHCP1: Demande IP
+    DHCP1-->>Client: Attribution IP
+
+    Note over DHCP1: DHCP1 tombe en panne
+    Client->>DHCP2: Demande IP
+    DHCP2-->>Client: Attribution IP
+
+    Note over DHCP1,DHCP2: Une fois DHCP1 relancé, synchronisation automatique
+```
 
 ---
 
@@ -227,6 +262,7 @@ Adaptez selon votre configuration réseau.
 - Sauvegardez régulièrement le fichier `dhcpd.leases`.
 - Surveillez les logs pour détecter tout problème de synchronisation.
 - Testez la bascule au moins une fois par trimestre.
+- Documentez votre architecture et vos procédures.
 
 ---
 
@@ -234,6 +270,7 @@ Adaptez selon votre configuration réseau.
 
 - [Documentation officielle ISC DHCP](https://kb.isc.org/docs/isc-dhcp-44-manual-pages-dhcpdconf)
 - [Failover Protocol](https://kb.isc.org/docs/isc-dhcp-44-manual-pages-dhcpdconf#failover-peer)
+- [Mermaid Live Editor](https://mermaid.live/) pour visualiser les schémas
 
 ---
 
