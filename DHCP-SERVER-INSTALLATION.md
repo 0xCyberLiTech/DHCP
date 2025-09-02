@@ -55,7 +55,7 @@ Le contenu est structuré, accessible et optimisé SEO pour répondre aux besoin
 - 🛡️ Experts cybersécurité : ressources techniques
 - 🚀 Passionnés du numérique : explorer les bonnes pratiques
 
-## TP Cours : Installation et configuration d’un serveur DHCP sous Debian 12 & 13
+## Installation et configuration d’un serveur DHCP sous Debian 12 & 13
 
 ## 🎯 Objectifs pédagogiques
 - Comprendre le rôle et le fonctionnement d’un serveur **DHCP**  
