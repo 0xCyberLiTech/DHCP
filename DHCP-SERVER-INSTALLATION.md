@@ -30,7 +30,7 @@
 
 </div>
 
-<!-- Optimisation SEO : DHCP, Dynamic Host Configuration Protocol, serveur DHCP, configuration IP, adresse IP automatique, réseau, administration système, Linux, Debian, cybersécurité, sécurité informatique, IT, open source, tutoriels, guides, formation, expertise, étudiants, professionnels, bonnes pratiques, ressources techniques, infrastructure réseau, services réseaux, supervision, logs, monitoring, cloud, virtualisation, DevSecOps -->
+<!-- Optimisation SEO : DHCP, secour, failover, Dynamic Host Configuration Protocol, serveur DHCP, configuration IP, adresse IP automatique, réseau, administration système, Linux, Debian, cybersécurité, sécurité informatique, IT, open source, tutoriels, guides, formation, expertise, étudiants, professionnels, bonnes pratiques, ressources techniques, infrastructure réseau, services réseaux, supervision, logs, monitoring, cloud, virtualisation, DevSecOps -->
 
 <div align="center">
   <img src="https://img.icons8.com/fluency/96/000000/cyber-security.png" alt="CyberSec" width="80"/>
@@ -57,154 +57,224 @@ Le contenu est structuré, accessible et optimisé SEO pour répondre aux besoin
 
 ---
 
-## Tutoriel : Installation et configuration d’un serveur DHCP (Debian 12/13)
-## Objectifs pédagogiques
-Ce guide vous permettra de :
-- Comprendre le rôle et le fonctionnement du DHCP
-- Installer et configurer un serveur DHCP sur Debian
-- Tester et dépanner le service
-- Réaliser des réservations et exclusions d’IP
-
-## Prérequis
-- Savoir utiliser la ligne de commande Linux
-- Avoir une machine Debian 12 ou 13 (physique ou virtuelle)
-- Disposer de droits administrateur (sudo)
+## Tutoriel : Installer un serveur DHCP de secours (Failover) sous Debian 12/13
 
 ---
 
-## Étape 1 : Présentation du DHCP
+## 1. Introduction
 
-Le DHCP (Dynamic Host Configuration Protocol) est un protocole réseau permettant d’attribuer automatiquement des adresses IP et d’autres paramètres réseau (passerelle, DNS, etc.) aux machines d’un réseau local. Il simplifie la gestion des adresses IP et évite les conflits d’adresses.
+Le protocole **DHCP Failover** permet à deux serveurs DHCP de fonctionner ensemble pour garantir une continuité de service en cas de panne. Si le serveur principal tombe, le serveur de secours prend le relais et attribue les adresses IP aux clients.
 
-### Schéma d’architecture réseau typique
+---
+
+## 2. Présentation des serveurs : Production et Secours
+
+Dans une architecture DHCP failover, deux serveurs collaborent :
+
+- **Serveur de Production (DHCP1)**  
+  Serveur principal gérant la majorité des demandes DHCP et l’attribution d’adresses IP.
+
+- **Serveur de Secours (DHCP2)**  
+  Serveur backup surveillant le serveur principal et prenant le relais en cas de panne, assurant ainsi la continuité du service.
+
+Les deux serveurs échangent leurs informations de baux DHCP en temps réel pour éviter tout conflit d’adresses.
+
+---
+
+### Schéma de l’architecture (Mermaid)
 
 ```mermaid
 flowchart LR
-  Internet---FW[Firewall]
-  FW---R[Routeur]
-  R---S[Serveur DHCP]
-  S---PC1[PC Client 1]
-  S---PC2[PC Client 2]
-  S---Imprimante[Imprimante]
+    subgraph Réseau
+        Client1[[Client 1]]
+        Client2[[Client 2]]
+        Client3[[Client 3]]
+    end
+
+    DHCP1[(Serveur DHCP<br>Production)]
+    DHCP2[(Serveur DHCP<br>Secours)]
+
+    Client1 -- Demande IP --> DHCP1
+    Client2 -- Demande IP --> DHCP1
+    Client3 -- Demande IP --> DHCP1
+
+    DHCP1 <-->|Synchronisation<br>Failover| DHCP2
+
+    Client1 -- Repli si panne --> DHCP2
+    Client2 -- Repli si panne --> DHCP2
+    Client3 -- Repli si panne --> DHCP2
 ```
 
-### Schéma du fonctionnement du protocole DHCP
+---
 
-```mermaid
-sequenceDiagram
-  participant Client
-  participant ServeurDHCP
-  Client->>ServeurDHCP: DHCP Discover
-  ServeurDHCP->>Client: DHCP Offer
-  Client->>ServeurDHCP: DHCP Request
-  ServeurDHCP->>Client: DHCP Ack
-```
+## 3. Prérequis
 
-### Rôle du DHCP
-- Attribution automatique des adresses IP
-- Configuration des paramètres réseau
-- Gestion centralisée des adresses
+- Deux serveurs Debian 12 ou 13 (ex : `dhcp1` et `dhcp2`)
+- Accès root ou sudo
+- Communication réseau entre les deux serveurs (même réseau ou VPN)
+- Ouverture des ports TCP 647 entre les deux serveurs
 
-### Fonctionnement
-1. Un client (PC, imprimante, etc.) se connecte au réseau et envoie une requête DHCP Discover.
-2. Le serveur DHCP répond avec une offre d’adresse IP (DHCP Offer).
-3. Le client accepte l’offre (DHCP Request).
-4. Le serveur confirme l’attribution (DHCP Ack).
+---
 
-## Exemple concret d’utilisation
-Dans une entreprise, le serveur DHCP attribue automatiquement une adresse IP à chaque poste de travail. Cela évite de configurer manuellement chaque machine et permet une gestion dynamique des connexions.
+## 4. Installation du serveur DHCP
 
-## TP pédagogique : Installation d’un serveur DHCP sous Debian 12 & 13
-
-### 1. Installation du serveur DHCP
-Sur Debian 12 et 13, le paquet à installer est toujours `isc-dhcp-server` :
+Sur **chaque serveur** (dhcp1 et dhcp2) :
 
 ```bash
 sudo apt update
 sudo apt install isc-dhcp-server
 ```
 
-### 2. Configuration du serveur DHCP
+---
 
-#### À propos de l'adresse MAC
-L'adresse MAC (Media Access Control) est un identifiant unique attribué à chaque carte réseau. Elle est composée de 6 groupes de deux chiffres hexadécimaux (exemple : AA:BB:CC:DD:EE:FF). Le serveur DHCP utilise l'adresse MAC pour reconnaître un appareil et lui attribuer une adresse IP fixe (bail statique).
+## 5. Configuration du DHCP Failover
 
+### 5.1. Fichier de configuration `/etc/dhcp/dhcpd.conf`
 
-Éditez le fichier de configuration `/etc/dhcp/dhcpd.conf` :
+Configurer les deux serveurs pour le failover.
 
-```bash
-default-lease-time 600;
-max-lease-time 7200;
+#### **Sur DHCP1 (Production) :**
+
+```conf
+authoritative;
+ddns-update-style none;
+
+failover peer "dhcp-failover" {
+  primary;
+  address 192.168.1.10;
+  port 647;
+  peer address 192.168.1.20;
+  peer port 647;
+  max-response-delay 60;
+  max-unacked-updates 10;
+  load balance max seconds 3;
+  mclt 3600;
+  split 128;
+}
+
 subnet 192.168.1.0 netmask 255.255.255.0 {
-  # Plage d'adresses attribuées dynamiquement
-  range 192.168.1.100 192.168.1.200;
-  option routers 192.168.1.1;
-  option domain-name-servers 8.8.8.8, 8.8.4.4;
-
-  # Exclusion d'IP (ne pas attribuer ces adresses)
-  # Les adresses exclues sont simplement en dehors de la plage 'range'
-  # Exemple : 192.168.1.10 à 192.168.1.20 sont réservées à des équipements fixes
-
-  # Réservation d'IP pour un poste précis (bail statique)
-  host imprimante {
-    hardware ethernet AA:BB:CC:DD:EE:FF;
-    fixed-address 192.168.1.10;
-  }
-  host serveur-nas {
-    hardware ethernet 11:22:33:44:55:66;
-    fixed-address 192.168.1.20;
+  pool {
+    failover peer "dhcp-failover";
+    range 192.168.1.100 192.168.1.200;
+    option routers 192.168.1.1;
+    option domain-name-servers 8.8.8.8, 8.8.4.4;
+    option domain-name "mondomaine.local";
+    default-lease-time 600;
+    max-lease-time 7200;
   }
 }
 ```
 
-Dans cet exemple :
-- Les adresses 192.168.1.10 et 192.168.1.20 sont réservées à des équipements spécifiques (imprimante, NAS) grâce à leur adresse MAC.
-- La plage dynamique va de 192.168.1.100 à 192.168.1.200, donc les adresses en dehors de cette plage (ex : 192.168.1.2 à 192.168.1.99) ne seront pas attribuées automatiquement.
+#### **Sur DHCP2 (Secours) :**
 
-Vérifiez que l’interface réseau utilisée par le serveur DHCP est bien définie dans `/etc/default/isc-dhcp-server` :
+```conf
+authoritative;
+ddns-update-style none;
 
-```bash
+failover peer "dhcp-failover" {
+  secondary;
+  address 192.168.1.20;
+  port 647;
+  peer address 192.168.1.10;
+  peer port 647;
+  max-response-delay 60;
+  max-unacked-updates 10;
+  load balance max seconds 3;
+  mclt 3600;
+}
+
+subnet 192.168.1.0 netmask 255.255.255.0 {
+  pool {
+    failover peer "dhcp-failover";
+    range 192.168.1.100 192.168.1.200;
+    option routers 192.168.1.1;
+    option domain-name-servers 8.8.8.8, 8.8.4.4;
+    option domain-name "mondomaine.local";
+    default-lease-time 600;
+    max-lease-time 7200;
+  }
+}
+```
+
+---
+
+### 5.2. Configuration de l’interface réseau
+
+Dans `/etc/default/isc-dhcp-server` :
+
+```sh
 INTERFACESv4="eth0"
 ```
-Remplacez `eth0` par le nom de votre interface réseau (utilisez `ip a` pour la connaître).
+Adaptez selon votre interface réseau.
 
-### 3. Démarrage et vérification
-Activez et démarrez le service DHCP :
+---
 
-```bash
-sudo systemctl enable isc-dhcp-server
-sudo systemctl start isc-dhcp-server
-sudo systemctl status isc-dhcp-server
-```
+## 6. Démarrage et synchronisation des serveurs
 
-### 4. Test sur un client
-Configurez un poste client en DHCP (mode automatique) et vérifiez qu’il reçoit bien une adresse IP du serveur.
+1. **Démarrez le serveur principal en premier :**
+   ```bash
+   sudo systemctl start isc-dhcp-server
+   ```
+2. **Attendez 1 minute**, puis démarrez le serveur de secours :
+   ```bash
+   sudo systemctl start isc-dhcp-server
+   ```
 
-### 5. Dépannage
-Consultez les logs en cas de problème :
+---
 
-```bash
-sudo journalctl -u isc-dhcp-server
-```
+## 7. Vérification du fonctionnement
 
-Vérifiez la syntaxe du fichier de configuration :
+- **Vérifiez le statut du service :**
+  ```bash
+  sudo systemctl status isc-dhcp-server
+  ```
+- **Vérifiez les logs :**
+  ```bash
+  sudo tail -f /var/log/syslog
+  ```
+  Vous devez voir des échanges “peer” entre les deux serveurs.
 
-```bash
-sudo dhcpd -t -cf /etc/dhcp/dhcpd.conf
-```
+---
 
-## Schéma explicatif
+## 8. Test du failover
 
 ```mermaid
-graph TD
-A[Client DHCP] -- DHCP Discover --> B[Serveur DHCP]
-B -- DHCP Offer --> A
-A -- DHCP Request --> B
-B -- DHCP Ack --> A
+sequenceDiagram
+    participant Client
+    participant DHCP1
+    participant DHCP2
+
+    Note over DHCP1: DHCP1 actif
+    Client->>DHCP1: Demande IP
+    DHCP1-->>Client: Attribution IP
+
+    Note over DHCP1: DHCP1 tombe en panne
+    Client->>DHCP2: Demande IP
+    DHCP2-->>Client: Attribution IP
+
+    Note over DHCP1,DHCP2: Une fois DHCP1 relancé, synchronisation automatique
 ```
 
-## Conclusion
-Le DHCP est essentiel pour automatiser la gestion des adresses IP dans un réseau. Ce TP vous permet de comprendre son fonctionnement et de mettre en place un serveur DHCP opérationnel.
+---
+
+## 9. Conseils & bonnes pratiques
+
+- Sauvegardez régulièrement le fichier `dhcpd.leases`.
+- Surveillez les logs pour détecter tout problème de synchronisation.
+- Testez la bascule au moins une fois par trimestre.
+- Documentez votre architecture et vos procédures.
+
+---
+
+## 10. Références
+
+- [Documentation officielle ISC DHCP](https://kb.isc.org/docs/isc-dhcp-44-manual-pages-dhcpdconf)
+- [Failover Protocol](https://kb.isc.org/docs/isc-dhcp-44-manual-pages-dhcpdconf#failover-peer)
+- [Mermaid Live Editor](https://mermaid.live/) pour visualiser les schémas
+
+---
+
+**Support pédagogique réalisé par Copilot – pour toute question, n’hésitez pas à demander !**
 
 ---
 
