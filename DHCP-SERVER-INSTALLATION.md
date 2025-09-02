@@ -57,8 +57,7 @@ Le contenu est structuré, accessible et optimisé SEO pour répondre aux besoin
 
 ---
 
-# Tutoriel : Installation et configuration d’un serveur DHCP (Debian 12/13)
-
+## Tutoriel : Installation et configuration d’un serveur DHCP (Debian 12/13)
 ## Objectifs pédagogiques
 Ce guide vous permettra de :
 - Comprendre le rôle et le fonctionnement du DHCP
