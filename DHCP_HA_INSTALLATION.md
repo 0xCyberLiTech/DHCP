@@ -63,16 +63,22 @@ Le contenu est structuré, accessible et optimisé SEO pour répondre aux besoin
 
 ## 1. Présentation de la solution DHCP HA
 
+
 La haute disponibilité (HA) pour DHCP consiste à avoir deux serveurs DHCP synchronisés, capables de prendre le relais en cas de panne de l’un d’eux. Sous Linux (Debian), on utilise généralement le mode "failover" intégré à ISC DHCP.
 
 ### Schéma général
 
 ```mermaid
-flowchart TD
-  DHCP1[Serveur DHCP 1 (Active/Passive)] --> DHCP2[Serveur DHCP 2 (Active/Passive)]
-  DHCP1 --> LAN[Réseau LAN]
+flowchart LR
+  DHCP1[Serveur DHCP 1]
+  DHCP2[Serveur DHCP 2]
+  LAN[Réseau LAN]
+  DHCP1 --> LAN
   DHCP2 --> LAN
+  DHCP1 --- DHCP2
 ```
+
+### Schéma général
 
 ---
 
