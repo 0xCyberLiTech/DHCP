@@ -275,21 +275,45 @@ Vous devez voir des messages du type "DHCP failover peer dhcp-ha: communications
 
 ## Schéma : Test de bascule DHCP HA
 
-```mermaid
-graph TD
-  DHCP1[DHCP1 (Primary) - OFF] --> DHCP2[DHCP2 (Secondary) - ON]
-  DHCP2 --> Clients[Clients DHCP]
-```
+Schéma : Test de bascule DHCP HA
 
++-------------------+           +-------------------+
+|  DHCP1 (Primary)  |           | DHCP2 (Secondary) |
+|      [OFF]        |           |      [ON]         |
++-------------------+           +-------------------+
+         |                               |
+         +-------------------------------+
+                         |
+                 +------------------+
+                 |   Clients DHCP   |
+                 +------------------+
 
 ---
 
 ## 8. Schéma de fonctionnement failover
 
+Schéma de fonctionnement failover
+
++-------------------+     <---->     +-------------------+
+|  DHCP1 (Primary)  |                | DHCP2 (Secondary) |
++-------------------+                +-------------------+
+         |                                   |
+         +---------------+-------------------+
+                         |
+                 +------------------+
+                 |   Clients DHCP   |
+                 +------------------+
+
 ---
 
 ## 9. Conseils pédagogiques
 
+- Prenez le temps de comprendre chaque paramètre de la configuration DHCP et failover.
+- Testez la bascule en coupant un serveur et observez le comportement des clients.
+- Analysez les logs pour suivre la synchronisation et la reprise du service.
+- Documentez vos manipulations et résultats pour consolider vos acquis.
+- Utilisez des schémas pour visualiser l’architecture et les flux réseau.
+- Expérimentez différentes plages d’adresses et options DHCP pour voir leur impact.
 
 ---
 
