@@ -57,224 +57,315 @@ Le contenu est structuré, accessible et optimisé SEO pour répondre aux besoin
 
 ---
 
-## Tutoriel : Installer un serveur DHCP de secours (Failover) sous Debian 12/13
+
+## TP Cours : Installation et configuration d’un serveur DHCP sous Debian 12 & 13
+
+### Objectifs pédagogiques
+- Comprendre le rôle et le fonctionnement d’un serveur DHCP
+- Installer et configurer un serveur DHCP sur Debian
+- Réaliser des réservations d’adresses IP et associer des options avancées (NTP, exclusions)
+- Savoir diagnostiquer et corriger les erreurs courantes
 
 ---
 
-## 1. Introduction
-
-Le protocole **DHCP Failover** permet à deux serveurs DHCP de fonctionner ensemble pour garantir une continuité de service en cas de panne. Si le serveur principal tombe, le serveur de secours prend le relais et attribue les adresses IP aux clients.
-
----
-
-## 2. Présentation des serveurs : Production et Secours
-
-Dans une architecture DHCP failover, deux serveurs collaborent :
-
-- **Serveur de Production (DHCP1)**  
-  Serveur principal gérant la majorité des demandes DHCP et l’attribution d’adresses IP.
-
-- **Serveur de Secours (DHCP2)**  
-  Serveur backup surveillant le serveur principal et prenant le relais en cas de panne, assurant ainsi la continuité du service.
-
-Les deux serveurs échangent leurs informations de baux DHCP en temps réel pour éviter tout conflit d’adresses.
+### Consignes générales
+Suivez les étapes ci-dessous, répondez aux questions et validez chaque étape par des tests ou observations. Ce TP est à réaliser sur une machine virtuelle ou physique sous Debian 12 ou 13.
 
 ---
 
-### Schéma de l’architecture (Mermaid)
-
-```mermaid
-flowchart LR
-    subgraph Réseau
-        Client1[[Client 1]]
-        Client2[[Client 2]]
-        Client3[[Client 3]]
-    end
-
-    DHCP1[(Serveur DHCP<br>Production)]
-    DHCP2[(Serveur DHCP<br>Secours)]
-
-    Client1 -- Demande IP --> DHCP1
-    Client2 -- Demande IP --> DHCP1
-    Client3 -- Demande IP --> DHCP1
-
-    DHCP1 <-->|Synchronisation<br>Failover| DHCP2
-
-    Client1 -- Repli si panne --> DHCP2
-    Client2 -- Repli si panne --> DHCP2
-    Client3 -- Repli si panne --> DHCP2
-```
-
----
-
-## 3. Prérequis
-
-- Deux serveurs Debian 12 ou 13 (ex : `dhcp1` et `dhcp2`)
-- Accès root ou sudo
-- Communication réseau entre les deux serveurs (même réseau ou VPN)
-- Ouverture des ports TCP 647 entre les deux serveurs
-
----
-
-## 4. Installation du serveur DHCP
-
-Sur **chaque serveur** (dhcp1 et dhcp2) :
+### 1. Mise à jour du système
+**Consigne :** Mettez à jour votre système. Notez la commande utilisée et le résultat.
 
 ```bash
-sudo apt update
-sudo apt install isc-dhcp-server
+sudo apt update && sudo apt upgrade -y
 ```
+
+**Observation :**
 
 ---
 
-## 5. Configuration du DHCP Failover
+### 2. Installation du serveur DHCP
+**Consigne :** Installez le paquet ISC DHCP Server. Notez la commande et vérifiez l’installation.
 
-### 5.1. Fichier de configuration `/etc/dhcp/dhcpd.conf`
-
-Configurer les deux serveurs pour le failover.
-
-#### **Sur DHCP1 (Production) :**
-
-```conf
-authoritative;
-ddns-update-style none;
-
-failover peer "dhcp-failover" {
-  primary;
-  address 192.168.1.10;
-  port 647;
-  peer address 192.168.1.20;
-  peer port 647;
-  max-response-delay 60;
-  max-unacked-updates 10;
-  load balance max seconds 3;
-  mclt 3600;
-  split 128;
-}
-
-subnet 192.168.1.0 netmask 255.255.255.0 {
-  pool {
-    failover peer "dhcp-failover";
-    range 192.168.1.100 192.168.1.200;
-    option routers 192.168.1.1;
-    option domain-name-servers 8.8.8.8, 8.8.4.4;
-    option domain-name "mondomaine.local";
-    default-lease-time 600;
-    max-lease-time 7200;
-  }
-}
+```bash
+sudo apt install isc-dhcp-server -y
 ```
 
-#### **Sur DHCP2 (Secours) :**
-
-```conf
-authoritative;
-ddns-update-style none;
-
-failover peer "dhcp-failover" {
-  secondary;
-  address 192.168.1.20;
-  port 647;
-  peer address 192.168.1.10;
-  peer port 647;
-  max-response-delay 60;
-  max-unacked-updates 10;
-  load balance max seconds 3;
-  mclt 3600;
-}
-
-subnet 192.168.1.0 netmask 255.255.255.0 {
-  pool {
-    failover peer "dhcp-failover";
-    range 192.168.1.100 192.168.1.200;
-    option routers 192.168.1.1;
-    option domain-name-servers 8.8.8.8, 8.8.4.4;
-    option domain-name "mondomaine.local";
-    default-lease-time 600;
-    max-lease-time 7200;
-  }
-}
-```
+**Observation :**
 
 ---
 
-### 5.2. Configuration de l’interface réseau
+### 3. Configuration du serveur DHCP
+**Consigne :** Ouvrez et modifiez le fichier `/etc/dhcp/dhcpd.conf` selon les exemples ci-dessous.
 
-Dans `/etc/default/isc-dhcp-server` :
+```conf
+authoritative;
+default-lease-time 600;
+max-lease-time 7200;
+subnet 192.168.1.0 netmask 255.255.255.0 {
+  range 192.168.1.100 192.168.1.200;
+  option routers 192.168.1.1;
+  option subnet-mask 255.255.255.0;
+  option domain-name-servers 8.8.8.8, 8.8.4.4;
+  # Exclusion d'adresses IP (ne pas attribuer ces adresses)
+  deny unknown-clients;
+  # Plage exclue (exemple: 192.168.1.150 à 192.168.1.160)
+  pool {
+    range 192.168.1.150 192.168.1.160;
+    deny all clients;
+  }
+  # Ajout du serveur NTP (ntpsec)
+  option ntp-servers 192.168.1.10;
+}
 
-```sh
+# Réservation d'une adresse IP pour un client spécifique
+host imprimante {
+  hardware ethernet AA:BB:CC:DD:EE:FF;
+  fixed-address 192.168.1.50;
+  option host-name "imprimante";
+  option ntp-servers 192.168.1.10;
+}
+```
+
+**Questions de réflexion :**
+- À quoi sert la directive `authoritative` ?
+- Pourquoi exclure certaines adresses IP du pool ?
+- Quel est l’intérêt de réserver une IP pour une machine ?
+- Que permet l’option `ntp-servers` ?
+
+**Observation :**
+
+---
+
+### 4. Définir l’interface réseau
+**Consigne :** Modifiez `/etc/default/isc-dhcp-server` pour indiquer l’interface réseau utilisée.
+
+```bash
 INTERFACESv4="eth0"
 ```
-Adaptez selon votre interface réseau.
+
+**Observation :**
 
 ---
 
-## 6. Démarrage et synchronisation des serveurs
+### 5. Démarrage et activation du service
+**Consigne :** Activez et démarrez le service DHCP. Vérifiez son statut.
 
-1. **Démarrez le serveur principal en premier :**
-   ```bash
-   sudo systemctl start isc-dhcp-server
-   ```
-2. **Attendez 1 minute**, puis démarrez le serveur de secours :
-   ```bash
-   sudo systemctl start isc-dhcp-server
-   ```
+```bash
+sudo systemctl enable isc-dhcp-server
+sudo systemctl start isc-dhcp-server
+sudo systemctl status isc-dhcp-server
+```
 
----
-
-## 7. Vérification du fonctionnement
-
-- **Vérifiez le statut du service :**
-  ```bash
-  sudo systemctl status isc-dhcp-server
-  ```
-- **Vérifiez les logs :**
-  ```bash
-  sudo tail -f /var/log/syslog
-  ```
-  Vous devez voir des échanges “peer” entre les deux serveurs.
+**Observation :**
 
 ---
 
-## 8. Test du failover
+### 6. Vérification et tests
+**Consigne :**
+- Vérifiez les logs du service DHCP
+- Testez l’attribution d’une adresse IP sur un client du réseau
 
-```mermaid
-sequenceDiagram
-    participant Client
-    participant DHCP1
-    participant DHCP2
+```bash
+sudo journalctl -u isc-dhcp-server
+```
 
-    Note over DHCP1: DHCP1 actif
-    Client->>DHCP1: Demande IP
-    DHCP1-->>Client: Attribution IP
+**Observation :**
 
-    Note over DHCP1: DHCP1 tombe en panne
-    Client->>DHCP2: Demande IP
-    DHCP2-->>Client: Attribution IP
+---
 
-    Note over DHCP1,DHCP2: Une fois DHCP1 relancé, synchronisation automatique
+### 7. Dépannage et analyse
+**Consigne :** Listez les erreurs possibles et proposez des solutions.
+
+**Questions de réflexion :**
+- Que faire si le service ne démarre pas ?
+- Comment vérifier la syntaxe du fichier de configuration ?
+- Comment s’assurer que le port UDP 67 est ouvert ?
+
+**Observation :**
+
+---
+
+### 8. Pour aller plus loin
+**Consigne :** Explorez la documentation officielle et testez des options avancées (réservations multiples, options personnalisées).
+https://wiki.debian.org/DHCP_Server
+
+---
+**Fin du TP**
+
+### Introduction
+Le serveur DHCP (Dynamic Host Configuration Protocol) permet d’attribuer automatiquement des adresses IP et autres paramètres réseau aux machines d’un réseau local. Ce tutoriel vous guide pas à pas pour installer et configurer un serveur DHCP sur Debian 12 et 13.
+
+### Prérequis
+- Une machine sous Debian 12 ou 13 (physique ou virtuelle)
+- Accès root ou sudo
+- Connexion réseau active
+
+### 1. Mise à jour du système
+Avant toute installation, mettez à jour votre système :
+
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+### 2. Installation du serveur DHCP
+Installez le paquet ISC DHCP Server :
+
+```bash
+sudo apt install isc-dhcp-server -y
+```
+
+### 3. Configuration du serveur DHCP
+Le fichier principal de configuration est `/etc/dhcp/dhcpd.conf`.
+
+Ouvrez-le avec votre éditeur préféré :
+
+```bash
+sudo nano /etc/dhcp/dhcpd.conf
+```
+
+Ajoutez une configuration de base (à adapter selon votre réseau) :
+
+```conf
+authoritative;
+default-lease-time 600;
+max-lease-time 7200;
+subnet 192.168.1.0 netmask 255.255.255.0 {
+  range 192.168.1.100 192.168.1.200;
+  option routers 192.168.1.1;
+  option subnet-mask 255.255.255.0;
+  option domain-name-servers 8.8.8.8, 8.8.4.4;
+  # Exclusion d'adresses IP (ne pas attribuer ces adresses)
+  deny unknown-clients;
+  # Plage exclue (exemple: 192.168.1.150 à 192.168.1.160)
+  # Pour exclure, ne pas inclure dans la plage 'range' ou utiliser 'deny' dans un pool séparé
+  # Exemple de pool exclu :
+  pool {
+    range 192.168.1.150 192.168.1.160;
+    deny all clients;
+  }
+  # Ajout du serveur NTP (ntpsec)
+  option ntp-servers 192.168.1.10;
+}
+
+# Réservation d'une adresse IP pour un client spécifique
+host imprimante {
+  hardware ethernet AA:BB:CC:DD:EE:FF;
+  fixed-address 192.168.1.50;
+  option host-name "imprimante";
+  option ntp-servers 192.168.1.10;
+}
+```
+
+> **Remarque :** Adaptez l’adresse du réseau, la plage IP et la passerelle selon votre infrastructure.
+
+### 4. Définir l’interface réseau
+Indiquez l’interface à utiliser par le serveur DHCP dans `/etc/default/isc-dhcp-server` :
+
+```bash
+sudo nano /etc/default/isc-dhcp-server
+```
+
+Modifiez la ligne INTERFACESv4 :
+
+```bash
+INTERFACESv4="eth0"
+```
+
+Remplacez `eth0` par le nom de votre interface réseau (utilisez `ip a` pour la connaître).
+
+### 5. Démarrage et activation du service
+Activez et démarrez le service DHCP :
+
+```bash
+sudo systemctl enable isc-dhcp-server
+sudo systemctl start isc-dhcp-server
+```
+
+### 6. Vérification du fonctionnement
+Vérifiez le statut du service :
+
+```bash
+sudo systemctl status isc-dhcp-server
+```
+
+Consultez les logs pour diagnostiquer d’éventuels problèmes :
+
+```bash
+sudo journalctl -u isc-dhcp-server
+```
+
+### 7. Dépannage
+- Vérifiez la syntaxe du fichier de configuration :
+  - Les erreurs empêchent le démarrage du service.
+- Assurez-vous que l’interface réseau est correcte.
+- Vérifiez que le port UDP 67 n’est pas bloqué par un firewall.
+
+### 8. Aller plus loin
+Pour des configurations avancées (réservations d’IP, options supplémentaires), consultez la documentation officielle :
+https://wiki.debian.org/DHCP_Server
+
+---
+
+## Exemples de configurations DHCP
+
+### 1. Pool IP classique
+```conf
+subnet 192.168.10.0 netmask 255.255.255.0 {
+  range 192.168.10.100 192.168.10.200;
+  option routers 192.168.10.1;
+  option subnet-mask 255.255.255.0;
+  option domain-name-servers 1.1.1.1, 8.8.8.8;
+}
+```
+
+### 2. Réservations pour plusieurs machines
+```conf
+host serveur1 {
+  hardware ethernet 00:11:22:33:44:55;
+  fixed-address 192.168.10.10;
+}
+host imprimante {
+  hardware ethernet AA:BB:CC:DD:EE:FF;
+  fixed-address 192.168.10.20;
+}
+```
+
+### 3. Exclusion d’une plage IP
+```conf
+subnet 192.168.10.0 netmask 255.255.255.0 {
+  range 192.168.10.100 192.168.10.150;
+  range 192.168.10.160 192.168.10.200;
+  # Les adresses 192.168.10.151 à 159 sont exclues
+}
+```
+
+### 4. Attribution d’options avancées
+```conf
+subnet 192.168.20.0 netmask 255.255.255.0 {
+  range 192.168.20.50 192.168.20.100;
+  option routers 192.168.20.1;
+  option domain-name-servers 8.8.8.8, 8.8.4.4;
+  option ntp-servers 192.168.20.2;
+  option domain-name "reseau.local";
+}
+```
+
+### 5. Pool pour invités (bail court)
+```conf
+subnet 192.168.30.0 netmask 255.255.255.0 {
+  range 192.168.30.100 192.168.30.120;
+  default-lease-time 300;
+  max-lease-time 600;
+  option routers 192.168.30.1;
+}
 ```
 
 ---
-
-## 9. Conseils & bonnes pratiques
-
-- Sauvegardez régulièrement le fichier `dhcpd.leases`.
-- Surveillez les logs pour détecter tout problème de synchronisation.
-- Testez la bascule au moins une fois par trimestre.
-- Documentez votre architecture et vos procédures.
+Chaque exemple est à adapter selon votre réseau. Les commentaires dans chaque bloc facilitent la compréhension et l’adaptation.
 
 ---
-
-## 10. Références
-
-- [Documentation officielle ISC DHCP](https://kb.isc.org/docs/isc-dhcp-44-manual-pages-dhcpdconf)
-- [Failover Protocol](https://kb.isc.org/docs/isc-dhcp-44-manual-pages-dhcpdconf#failover-peer)
-- [Mermaid Live Editor](https://mermaid.live/) pour visualiser les schémas
-
----
-
-**Support pédagogique réalisé par Copilot – pour toute question, n’hésitez pas à demander !**
+Ce guide vous permet de mettre en place rapidement un serveur DHCP fonctionnel sur Debian 12 & 13.
 
 ---
 
