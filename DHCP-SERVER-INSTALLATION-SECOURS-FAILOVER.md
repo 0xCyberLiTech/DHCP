@@ -57,7 +57,7 @@ Le contenu est structuré, accessible et optimisé SEO pour répondre aux besoin
 
 ---
 
-# Tutoriel : Installation d’un serveur DHCP de secours (Failover) sous Debian 12/13
+## Tutoriel : Installation d’un serveur DHCP de secours (Failover) sous Debian 12/13
 
 ---
 
