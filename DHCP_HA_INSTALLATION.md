@@ -287,12 +287,7 @@ flowchart LR
 
 ## 8. Schéma de fonctionnement failover
 
-```mermaid
-graph TD;
-    DHCP1[DHCP1 (Primary)] <--> DHCP2[DHCP2 (Secondary)]
-    DHCP1 --> Clients[Clients]
-    DHCP2 --> Clients
-```
+
 
 ---
 
