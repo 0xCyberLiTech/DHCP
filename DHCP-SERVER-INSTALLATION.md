@@ -30,7 +30,7 @@
 
 </div>
 
-<!-- Optimisation SEO : DHCP, secour, failover, Dynamic Host Configuration Protocol, serveur DHCP, configuration IP, adresse IP automatique, réseau, administration système, Linux, Debian, cybersécurité, sécurité informatique, IT, open source, tutoriels, guides, formation, expertise, étudiants, professionnels, bonnes pratiques, ressources techniques, infrastructure réseau, services réseaux, supervision, logs, monitoring, cloud, virtualisation, DevSecOps -->
+<!-- Optimisation SEO : DHCP, Dynamic Host Configuration Protocol, serveur DHCP, configuration IP, adresse IP automatique, réseau, administration système, Linux, Debian, cybersécurité, sécurité informatique, IT, open source, tutoriels, guides, formation, expertise, étudiants, professionnels, bonnes pratiques, ressources techniques, infrastructure réseau, services réseaux, supervision, logs, monitoring, cloud, virtualisation, DevSecOps -->
 
 <div align="center">
   <img src="https://img.icons8.com/fluency/96/000000/cyber-security.png" alt="CyberSec" width="80"/>
@@ -55,10 +55,7 @@ Le contenu est structuré, accessible et optimisé SEO pour répondre aux besoin
 - 🛡️ Experts cybersécurité : ressources techniques
 - 🚀 Passionnés du numérique : explorer les bonnes pratiques
 
----
-
-
-# TP Cours : Installation et configuration d’un serveur DHCP sous Debian 12 & 13
+## TP Cours : Installation et configuration d’un serveur DHCP sous Debian 12 & 13
 
 ## 🎯 Objectifs pédagogiques
 - Comprendre le rôle et le fonctionnement d’un serveur **DHCP**  
