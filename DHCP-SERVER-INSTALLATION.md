@@ -58,197 +58,96 @@ Le contenu est structuré, accessible et optimisé SEO pour répondre aux besoin
 ---
 
 
-## TP Cours : Installation et configuration d’un serveur DHCP sous Debian 12 & 13
+# TP Cours : Installation et configuration d’un serveur DHCP sous Debian 12 & 13
 
-### Objectifs pédagogiques
-- Comprendre le rôle et le fonctionnement d’un serveur DHCP
-- Installer et configurer un serveur DHCP sur Debian
-- Réaliser des réservations d’adresses IP et associer des options avancées (NTP, exclusions)
-- Savoir diagnostiquer et corriger les erreurs courantes
-
----
-
-### Consignes générales
-Suivez les étapes ci-dessous, répondez aux questions et validez chaque étape par des tests ou observations. Ce TP est à réaliser sur une machine virtuelle ou physique sous Debian 12 ou 13.
+## 🎯 Objectifs pédagogiques
+- Comprendre le rôle et le fonctionnement d’un serveur **DHCP**  
+- Installer et configurer un serveur DHCP sur **Debian 12 ou 13**  
+- Réaliser des **réservations d’adresses IP** et ajouter des **options avancées** (NTP, exclusions)  
+- Diagnostiquer et corriger les **erreurs courantes**  
 
 ---
 
-### 1. Mise à jour du système
-**Consigne :** Mettez à jour votre système. Notez la commande utilisée et le résultat.
+## 🔧 Prérequis
+- Une machine sous **Debian 12 (Bookworm)** ou **Debian 13 (Trixie)**, physique ou virtuelle
+- Accès **root** ou **sudo**
+- Une **interface réseau** connectée au LAN (non NAT uniquement si vous testez entre VMs)
+- Un client (VM/PC) pour tester l’obtention d’une adresse via DHCP
+
+---
+
+## 🔹 Consignes générales
+- Répondez aux questions de réflexion et **notez vos observations** après chaque étape.  
+- Validez vos configurations par des **tests réels** (client qui récupère une IP, consultation des logs).  
+- Sauvegardez vos fichiers avant modification.
+
+---
+
+## 1. Mise à jour du système
+**Consigne :** Mettez à jour le système.  
 
 ```bash
 sudo apt update && sudo apt upgrade -y
 ```
 
-**Observation :**
+**Observation :**  
+…
 
 ---
 
-### 2. Installation du serveur DHCP
-**Consigne :** Installez le paquet ISC DHCP Server. Notez la commande et vérifiez l’installation.
+## 2. Installation du serveur DHCP
+**Consigne :** Installez le paquet **ISC DHCP Server**.  
 
 ```bash
 sudo apt install isc-dhcp-server -y
 ```
 
-**Observation :**
-
----
-
-### 3. Configuration du serveur DHCP
-**Consigne :** Ouvrez et modifiez le fichier `/etc/dhcp/dhcpd.conf` selon les exemples ci-dessous.
-
-```conf
-authoritative;
-default-lease-time 600;
-max-lease-time 7200;
-subnet 192.168.1.0 netmask 255.255.255.0 {
-  range 192.168.1.100 192.168.1.200;
-  option routers 192.168.1.1;
-  option subnet-mask 255.255.255.0;
-  option domain-name-servers 8.8.8.8, 8.8.4.4;
-  # Exclusion d'adresses IP (ne pas attribuer ces adresses)
-  deny unknown-clients;
-  # Plage exclue (exemple: 192.168.1.150 à 192.168.1.160)
-  pool {
-    range 192.168.1.150 192.168.1.160;
-    deny all clients;
-  }
-  # Ajout du serveur NTP (ntpsec)
-  option ntp-servers 192.168.1.10;
-}
-
-# Réservation d'une adresse IP pour un client spécifique
-host imprimante {
-  hardware ethernet AA:BB:CC:DD:EE:FF;
-  fixed-address 192.168.1.50;
-  option host-name "imprimante";
-  option ntp-servers 192.168.1.10;
-}
-```
-
-**Questions de réflexion :**
-- À quoi sert la directive `authoritative` ?
-- Pourquoi exclure certaines adresses IP du pool ?
-- Quel est l’intérêt de réserver une IP pour une machine ?
-- Que permet l’option `ntp-servers` ?
-
-**Observation :**
-
----
-
-### 4. Définir l’interface réseau
-**Consigne :** Modifiez `/etc/default/isc-dhcp-server` pour indiquer l’interface réseau utilisée.
-
+**Vérification :**
 ```bash
-INTERFACESv4="eth0"
+dpkg -l | grep isc-dhcp-server
 ```
 
-**Observation :**
+**Observation :**  
+…
 
 ---
 
-### 5. Démarrage et activation du service
-**Consigne :** Activez et démarrez le service DHCP. Vérifiez son statut.
+## 3. Configuration du serveur DHCP
+**Fichiers importants :**
+- Configuration : `/etc/dhcp/dhcpd.conf`
+- Interface(s) utilisée(s) : `/etc/default/isc-dhcp-server`
+- Baux attribués : `/var/lib/dhcp/dhcpd.leases`
 
-```bash
-sudo systemctl enable isc-dhcp-server
-sudo systemctl start isc-dhcp-server
-sudo systemctl status isc-dhcp-server
-```
-
-**Observation :**
-
----
-
-### 6. Vérification et tests
-**Consigne :**
-- Vérifiez les logs du service DHCP
-- Testez l’attribution d’une adresse IP sur un client du réseau
-
-```bash
-sudo journalctl -u isc-dhcp-server
-```
-
-**Observation :**
-
----
-
-### 7. Dépannage et analyse
-**Consigne :** Listez les erreurs possibles et proposez des solutions.
-
-**Questions de réflexion :**
-- Que faire si le service ne démarre pas ?
-- Comment vérifier la syntaxe du fichier de configuration ?
-- Comment s’assurer que le port UDP 67 est ouvert ?
-
-**Observation :**
-
----
-
-### 8. Pour aller plus loin
-**Consigne :** Explorez la documentation officielle et testez des options avancées (réservations multiples, options personnalisées).
-https://wiki.debian.org/DHCP_Server
-
----
-**Fin du TP**
-
-### Introduction
-Le serveur DHCP (Dynamic Host Configuration Protocol) permet d’attribuer automatiquement des adresses IP et autres paramètres réseau aux machines d’un réseau local. Ce tutoriel vous guide pas à pas pour installer et configurer un serveur DHCP sur Debian 12 et 13.
-
-### Prérequis
-- Une machine sous Debian 12 ou 13 (physique ou virtuelle)
-- Accès root ou sudo
-- Connexion réseau active
-
-### 1. Mise à jour du système
-Avant toute installation, mettez à jour votre système :
-
-```bash
-sudo apt update && sudo apt upgrade -y
-```
-
-### 2. Installation du serveur DHCP
-Installez le paquet ISC DHCP Server :
-
-```bash
-sudo apt install isc-dhcp-server -y
-```
-
-### 3. Configuration du serveur DHCP
-Le fichier principal de configuration est `/etc/dhcp/dhcpd.conf`.
-
-Ouvrez-le avec votre éditeur préféré :
+**Consigne :** Éditez le fichier principal :
 
 ```bash
 sudo nano /etc/dhcp/dhcpd.conf
 ```
 
-Ajoutez une configuration de base (à adapter selon votre réseau) :
-
+**Exemple de configuration de base (à adapter à votre réseau) :**
 ```conf
 authoritative;
 default-lease-time 600;
 max-lease-time 7200;
+
 subnet 192.168.1.0 netmask 255.255.255.0 {
   range 192.168.1.100 192.168.1.200;
   option routers 192.168.1.1;
   option subnet-mask 255.255.255.0;
   option domain-name-servers 8.8.8.8, 8.8.4.4;
-  # Exclusion d'adresses IP (ne pas attribuer ces adresses)
-  deny unknown-clients;
-  # Plage exclue (exemple: 192.168.1.150 à 192.168.1.160)
-  # Pour exclure, ne pas inclure dans la plage 'range' ou utiliser 'deny' dans un pool séparé
-  # Exemple de pool exclu :
+
+  # Exclusion d’une plage via un pool qui refuse tous les clients.
+  # (Alternative : ne pas inclure cette plage dans 'range')
   pool {
     range 192.168.1.150 192.168.1.160;
     deny all clients;
   }
-  # Ajout du serveur NTP (ntpsec)
+
+  # Serveur NTP local
   option ntp-servers 192.168.1.10;
 }
 
-# Réservation d'une adresse IP pour un client spécifique
+# Réservation pour une imprimante (remplacer l’adresse MAC)
 host imprimante {
   hardware ethernet AA:BB:CC:DD:EE:FF;
   fixed-address 192.168.1.50;
@@ -257,59 +156,118 @@ host imprimante {
 }
 ```
 
-> **Remarque :** Adaptez l’adresse du réseau, la plage IP et la passerelle selon votre infrastructure.
+> 💡 **Note :** La directive `deny unknown-clients;` (si utilisée dans un subnet) limite l’attribution aux hôtes connus (avec réservation). Ne l’activez que si vous avez prévu des réservations pour tous les clients autorisés.
 
-### 4. Définir l’interface réseau
-Indiquez l’interface à utiliser par le serveur DHCP dans `/etc/default/isc-dhcp-server` :
+**Validation de la syntaxe :**
+```bash
+sudo dhcpd -t -4 -cf /etc/dhcp/dhcpd.conf
+```
+
+**Questions de réflexion :**
+- À quoi sert la directive `authoritative` ?  
+- Pourquoi exclure certaines adresses IP du pool ?  
+- Quel est l’intérêt d’une réservation IP ?  
+- Que permet l’option `ntp-servers` ?  
+
+**Observation :**  
+…
+
+---
+
+## 4. Définir l’interface réseau
+**Consigne :** Indiquez l’interface à utiliser par le serveur DHCP dans `/etc/default/isc-dhcp-server` :
 
 ```bash
 sudo nano /etc/default/isc-dhcp-server
 ```
-
-Modifiez la ligne INTERFACESv4 :
+Modifiez/ajoutez la ligne (adapter `eth0` au nom réel, vérifiable avec `ip a`) :
 
 ```bash
 INTERFACESv4="eth0"
+# INTERFACESv6=""
 ```
 
-Remplacez `eth0` par le nom de votre interface réseau (utilisez `ip a` pour la connaître).
+**Observation :**  
+…
 
-### 5. Démarrage et activation du service
-Activez et démarrez le service DHCP :
+---
+
+## 5. Démarrage et activation du service
+**Consigne :** Activez et démarrez le service DHCP, puis vérifiez l’état.  
 
 ```bash
 sudo systemctl enable isc-dhcp-server
 sudo systemctl start isc-dhcp-server
-```
-
-### 6. Vérification du fonctionnement
-Vérifiez le statut du service :
-
-```bash
 sudo systemctl status isc-dhcp-server
 ```
 
-Consultez les logs pour diagnostiquer d’éventuels problèmes :
-
-```bash
-sudo journalctl -u isc-dhcp-server
-```
-
-### 7. Dépannage
-- Vérifiez la syntaxe du fichier de configuration :
-  - Les erreurs empêchent le démarrage du service.
-- Assurez-vous que l’interface réseau est correcte.
-- Vérifiez que le port UDP 67 n’est pas bloqué par un firewall.
-
-### 8. Aller plus loin
-Pour des configurations avancées (réservations d’IP, options supplémentaires), consultez la documentation officielle :
-https://wiki.debian.org/DHCP_Server
+**Observation :**  
+…
 
 ---
 
-## Exemples de configurations DHCP
+## 6. Vérification et tests
+**Logs du service :**
+```bash
+sudo journalctl -u isc-dhcp-server --since "today"
+```
 
-### 1. Pool IP classique
+**Baux délivrés (sur le serveur) :**
+```bash
+sudo tail -n 20 /var/lib/dhcp/dhcpd.leases
+```
+
+**Test côté client :**
+- Configurez le client pour obtenir une **IP en DHCP**.  
+- Vérifiez l’IP obtenue (`ip a`), la **passerelle** (`ip route`) et le **DNS** (`/etc/resolv.conf`).
+
+**Observation :**  
+…
+
+---
+
+## 7. Dépannage et analyse
+### Problèmes fréquents et solutions
+- **Le service ne démarre pas :**
+  - Vérifier la syntaxe : `sudo dhcpd -t -4 -cf /etc/dhcp/dhcpd.conf`
+  - Consulter les logs : `sudo journalctl -u isc-dhcp-server -b`
+  - Nom d’interface erroné dans `/etc/default/isc-dhcp-server`
+
+- **Conflit de port (UDP 67) :**
+  - Vérifier l’écoute : `sudo ss -ulpen | grep :67`
+  - Arrêter le service en conflit ou changer la configuration.
+
+- **Filtrage réseau / pare-feu :**
+  - UFW : `sudo ufw allow 67/udp`
+  - nftables (exemple simplifié) :
+    ```bash
+    sudo nft add rule inet filter input udp dport 67 accept
+    ```
+
+- **Aucun bail délivré :**
+  - Câblage / VLAN / ponts virtuels mal configurés
+  - Présence d’un **autre** serveur DHCP sur le même segment (conflit)
+  - `deny unknown-clients;` activé par erreur
+
+**Questions de réflexion :**
+- Que faire si le service refuse toujours de démarrer après correction ?  
+- Comment diagnostiquer un conflit de port ?  
+- Comment vérifier qu’un autre DHCP n’opère pas sur le même LAN ?  
+
+**Observation :**  
+…
+
+---
+
+## 8. Pour aller plus loin (options avancées)
+- **Réservations multiples**, options **domain-name**, **NTP**, **PXE** (option 66/67), etc.
+- Documentation officielle Debian : https://wiki.debian.org/DHCP_Server
+
+---
+
+## 📚 Annexes – Exemples de configurations
+
+### 1) Pool IP classique
 ```conf
 subnet 192.168.10.0 netmask 255.255.255.0 {
   range 192.168.10.100 192.168.10.200;
@@ -319,7 +277,7 @@ subnet 192.168.10.0 netmask 255.255.255.0 {
 }
 ```
 
-### 2. Réservations pour plusieurs machines
+### 2) Réservations multiples
 ```conf
 host serveur1 {
   hardware ethernet 00:11:22:33:44:55;
@@ -331,7 +289,7 @@ host imprimante {
 }
 ```
 
-### 3. Exclusion d’une plage IP
+### 3) Exclusion d’une plage IP
 ```conf
 subnet 192.168.10.0 netmask 255.255.255.0 {
   range 192.168.10.100 192.168.10.150;
@@ -340,7 +298,7 @@ subnet 192.168.10.0 netmask 255.255.255.0 {
 }
 ```
 
-### 4. Attribution d’options avancées
+### 4) Attribution d’options avancées
 ```conf
 subnet 192.168.20.0 netmask 255.255.255.0 {
   range 192.168.20.50 192.168.20.100;
@@ -351,7 +309,7 @@ subnet 192.168.20.0 netmask 255.255.255.0 {
 }
 ```
 
-### 5. Pool pour invités (bail court)
+### 5) Pool pour invités (bail court)
 ```conf
 subnet 192.168.30.0 netmask 255.255.255.0 {
   range 192.168.30.100 192.168.30.120;
@@ -362,10 +320,8 @@ subnet 192.168.30.0 netmask 255.255.255.0 {
 ```
 
 ---
-Chaque exemple est à adapter selon votre réseau. Les commentaires dans chaque bloc facilitent la compréhension et l’adaptation.
 
----
-Ce guide vous permet de mettre en place rapidement un serveur DHCP fonctionnel sur Debian 12 & 13.
+**Fin du TP** ✅
 
 ---
 
