@@ -74,9 +74,9 @@ Le contenu est structuré, accessible et optimisé SEO pour répondre aux besoin
 | **Catégorie**   | **Description**                             | **Accès rapide** |
 |-----------------|---------------------------------------------|------------------|
 | **DHCP**        | Installation server DHCP                    | [![Explorer](https://img.shields.io/badge/EXPLORER-4CAF50?style=for-the-badge&logo=github&logoColor=white)](https://github.com/0xCyberLiTech/DHCP/blob/main/DHCP-SERVER-INSTALLATION.md) |
+| **DHCP**   | Installation serveur DHCP de secours (Failover)   | [![Explorer](https://img.shields.io/badge/EXPLORER-4CAF50?style=for-the-badge&logo=github&logoColor=white)](DHCP-SERVER-INSTALLATION-SECOURS-FAILOVER.md) |
+| **DHCP**   | Installation serveur DHCP HA   | [![Explorer](https://img.shields.io/badge/EXPLORER-4CAF50?style=for-the-badge&logo=github&logoColor=white)](DHCP_HA_INSTALLATION.md) |
 | **DHCP**   | TP avancé 1   | [<img src="https://img.shields.io/badge/EXPLORER-red?style=for-the-badge&logo=github&logoColor=white" />]() |
-| **DHCP**   | TP avancé 2   | [<img src="https://img.shields.io/badge/EXPLORER-red?style=for-the-badge&logo=github&logoColor=white" />]() |
-| **DHCP**   | TP avancé 3   | [<img src="https://img.shields.io/badge/EXPLORER-red?style=for-the-badge&logo=github&logoColor=white" />]() |
 
 
 </div>
