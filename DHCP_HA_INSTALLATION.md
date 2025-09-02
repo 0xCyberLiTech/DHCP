@@ -275,14 +275,6 @@ Vous devez voir des messages du type "DHCP failover peer dhcp-ha: communications
 
 ## Schéma : Test de bascule DHCP HA
 
-```mermaid
-flowchart LR
-  DHCP1[DHCP1 (Primary)] --> DHCP2[DHCP2 (Secondary)]
-  DHCP2 --> Clients[Clients DHCP]
-  DHCP1 --> DHCP2
-  DHCP2 --> Clients
-```
-
 
 ---
 
