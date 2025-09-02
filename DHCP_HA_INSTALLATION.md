@@ -69,9 +69,10 @@ La haute disponibilité (HA) pour DHCP consiste à avoir deux serveurs DHCP sync
 
 ```mermaid
 flowchart TD
-  DHCP1[Serveur DHCP 1 (Active/Passive)] --- LAN[Réseau LAN]
-  DHCP2[Serveur DHCP 2 (Active/Passive)] --- LAN
-  DHCP1 <--> DHCP2
+  DHCP1[Serveur DHCP 1 (Active/Passive)] --> LAN[Réseau LAN]
+  DHCP2[Serveur DHCP 2 (Active/Passive)] --> LAN
+  DHCP1 --> DHCP2
+  DHCP2 --> DHCP1
 ```
 
 ---
