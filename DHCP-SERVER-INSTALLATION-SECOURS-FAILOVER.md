@@ -58,9 +58,6 @@ Le contenu est structuré, accessible et optimisé SEO pour répondre aux besoin
 ---
 
 ## Tutoriel : Installation d’un serveur DHCP de secours (Failover) sous Debian 12/13
-
----
-
 ## 1. Introduction
 
 Le protocole **DHCP Failover** permet à deux serveurs DHCP de fonctionner ensemble afin d’assurer une continuité de service en cas de panne de l’un d’eux. En cas d’indisponibilité du serveur principal, le serveur de secours prend le relais et distribue les adresses IP aux clients.
