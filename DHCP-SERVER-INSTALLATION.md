@@ -279,11 +279,11 @@ subnet 192.168.10.0 netmask 255.255.255.0 {
 ### 2) Réservations multiples
 ```conf
 host serveur1 {
-  hardware ethernet 00:11:22:33:44:55;
+  hardware ethernet 00:00:00:00:00:01;
   fixed-address 192.168.10.10;
 }
 host imprimante {
-  hardware ethernet AA:BB:CC:DD:EE:FF;
+  hardware ethernet 00:00:00:00:00:11;
   fixed-address 192.168.10.20;
 }
 ```
