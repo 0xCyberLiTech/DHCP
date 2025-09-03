@@ -55,6 +55,8 @@ Le contenu est structuré, accessible et optimisé SEO pour répondre aux besoin
 - 🛡️ Experts cybersécurité : ressources techniques
 - 🚀 Passionnés du numérique : explorer les bonnes pratiques
 
+---
+
 ## Installation et configuration d’un serveur DHCP sous Debian 12 & 13
 
 ## 🎯 Objectifs pédagogiques
