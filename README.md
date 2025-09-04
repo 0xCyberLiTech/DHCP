@@ -30,10 +30,6 @@
 
 </div>
 
-<!--
-Optimisation SEO : mots-clés DHCP, 0xCyberLiTech, DHCP, Dynamic Host Configuration Protocol, serveur DHCP, configuration IP, adresse IP automatique, réseau, administration système, Linux, Debian, cybersécurité, sécurité informatique, IT, open source, tutoriels, guides, formation, expertise, étudiants, professionnels, bonnes pratiques, ressources techniques, infrastructure réseau, services réseaux, supervision, logs, monitoring, cloud, virtualisation, DevSecOps
--->
-
 <div align="center">
   <img src="https://img.icons8.com/fluency/96/000000/cyber-security.png" alt="CyberSec" width="80"/>
 </div>
@@ -79,7 +75,6 @@ Le contenu est structuré, accessible et optimisé SEO pour répondre aux besoin
 | **DHCP**   | Secours (Failover)   | [![Explorer](https://img.shields.io/badge/EXPLORER-4CAF50?style=for-the-badge&logo=github&logoColor=white)](DHCP-SERVER-INSTALLATION-SECOURS-FAILOVER.md) |
 | **DHCP**   | Haute disponibilité (HA)  | [![Explorer](https://img.shields.io/badge/EXPLORER-4CAF50?style=for-the-badge&logo=github&logoColor=white)](DHCP_HA_INSTALLATION.md) |
 | **DHCP**   | TP avancé 1   | [<img src="https://img.shields.io/badge/EXPLORER-red?style=for-the-badge&logo=github&logoColor=white" />]() |
-
 
 </div>
 
