@@ -61,10 +61,6 @@ Le contenu est structuré, accessible et optimisé SEO pour répondre aux besoin
 
 # Installation et configuration d'un serveur DHCP sur Debian 13
 
-**Auteur :** Marc Malet  
-**Créé :** 06-02-2026  
-**Révisé :** 07-02-2026
-
 ## Objectif
 Ce README explique, pas à pas et de manière pédagogique, comment installer et configurer un serveur DHCP (`isc-dhcp-server`) sur une machine Debian 13. Il inclut vérifications, sauvegardes et conseils de sécurité.
 
