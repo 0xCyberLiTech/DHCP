@@ -378,3 +378,7 @@ Ici `net.ipv4.ip_forward = 1` (OBLIGATOIRE) et généralement NAT/masks via ipta
 </table>
 
 <br/>
+
+<b>🔒 Un projet proposé par <a href="https://github.com/0xCyberLiTech">0xCyberLiTech</a> • Développé en collaboration avec <a href="https://claude.ai">Claude AI</a> (Anthropic) 🔒</b>
+
+</div>
